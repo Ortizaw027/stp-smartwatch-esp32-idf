@@ -20,7 +20,10 @@
   "files.associations": {
     "esp_lcd_panel_ops.h": "c",
     "cstdint": "c",
-    "lvgl.h": "c"
+    "lvgl.h": "c",
+    "esp_lcd_touch_cst816s.h": "c",
+    "semphr.h": "c",
+    "touch_driver.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

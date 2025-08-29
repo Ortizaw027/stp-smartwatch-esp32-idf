@@ -1,3 +1,4 @@
 build/
 sdkconfig
 sdkconfig.old
+main/connectivity/wifi_config_local.h
