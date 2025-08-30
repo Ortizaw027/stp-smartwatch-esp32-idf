@@ -2,13 +2,13 @@
 
 This repository contains the firmware for the STP smartwatch, designed for the ESP32-S3-Touch-LCD-1.28 development board. The firmware is written in C using the ESP-IDF framework and utilizes the LVGL graphics library to provide a responsive, touch-enabled user interface.
 
-The watch features include basic timekeeping, a digital compass, and a stopwatch. It runs on FreeRTOS for efficient multitasking and supports low-power sleep modes. The project aims to deliver a modular, easy-to-understand codebase that can be extended or adapted for personal use.
+The watch features include basic timekeeping, fitness tracker, and a stopwatch. It runs on FreeRTOS for efficient multitasking and supports low-power sleep modes. The project aims to deliver a modular, easy-to-understand codebase that can be extended or adapted for personal use.
 
 ## Features
 
 - **Real-Time Clock**: Displays the current time using the internal RTC or synchronized source.
 - **Graphical UI**: Built using LVGL with support for smooth screen transitions and swiping between pages.
-- **Compass**: Reads and visualizes direction using the onboard IMU (6-axis sensor).
+- **Step Counter**: Using the IMU it tracks the wearers steps.
 - **Stopwatch**: Start, pause, and reset functionality with visual feedback.
 - **Touch Input**: Navigate the UI using the capacitive touch screen with swipe gesture recognition.
 - **FreeRTOS Integration**: All tasks are handled through a real-time operating system for concurrency and responsiveness.
@@ -21,7 +21,7 @@ The firmware is designed specifically for the [ESP32-S3-Touch-LCD-1.28 developme
 
 - An ESP32-S3 microcontroller with integrated Wi-Fi and Bluetooth.
 - A 1.28-inch round GC9A01 LCD display with touch input.
-- Onboard IMU sensor for motion and orientation detection.
+- Onboard IMU sensor for motion and gesture detection.
 - Backlight control via a dedicated GPIO pin.
 - USB-C interface for power and programming.
 
