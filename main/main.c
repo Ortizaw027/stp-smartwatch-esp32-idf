@@ -9,12 +9,11 @@
 #include "touch_driver.h"
 #include "driver/i2c_master.h"
 
-
 // I2C config
 #define I2C_NUM                     I2C_NUM_0
 #define I2C_SDA                     6
 #define I2C_SCL                     7
-#define I2C_FREQ_HZ                 400000
+#define I2C_FREQ_HZ                 100000
 #define CST816S_I2C_ADDR            0x15
 
 
@@ -48,8 +47,11 @@ void app_main(void)
       ESP_LOGE("LVGL", "LVGL failed to initialize.");
       return;
    }
-    // Init I2C
-      init_i2c();
+   // Initialize I2C
+   init_i2c();
+
+   // Initialize touch
+   touch_init(i2c_device_handle);
 
    // Creates a display in lvlg the correct size of our actual display
    lv_display_t * display1 = lv_display_create(240, 240);
