@@ -1,113 +1,100 @@
-#include <stdio.h>
 #include "touch_driver.h"
-#include "lvgl.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
-#include "driver/i2c_master.h"
 
-// Pin definitions
-#define INT_PIN        5
-#define RST_PIN        13
+#define TAG "TOUCH"
+
+// CST816S pins
+#define INT_PIN   5
+#define RST_PIN   13
+
+// Touch registers
+#define REG_FINGERS 0x02
+#define REG_XH      0x03
+#define REG_XL      0x04
+#define REG_YH      0x05
+#define REG_YL      0x06
 
 static SemaphoreHandle_t touch_sem = NULL;
+static i2c_master_dev_handle_t i2c_dev = NULL;
+static lv_indev_t *s_indev = NULL;  
 
+// Current touch state
+static volatile int16_t latest_x = 0;
+static volatile int16_t latest_y = 0;
+static volatile bool touch_down = false;
 
-// ISR triggers when INT pin goes low
-static void IRAM_ATTR gpio_isr_handler(void *args){
+// ------------------- ISR -------------------
+static void IRAM_ATTR gpio_isr_handler(void *args) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-    //Signals the task a touch event occurred
     xSemaphoreGiveFromISR(touch_sem, &xHigherPriorityTaskWoken);
-
-    if(xHigherPriorityTaskWoken){
+    if (xHigherPriorityTaskWoken) {
         portYIELD_FROM_ISR();
     }
 }
 
-void touch_read(void *args){
-    i2c_master_dev_handle_t i2c_handle = (i2c_master_dev_handle_t)args;
-    uint8_t gesture;
-    uint8_t xh, xl, yh, yl;
-    uint16_t x, y;
-
-    while(1){
-        // Wait for ISR semaphore (touch event)
-        if(xSemaphoreTake(touch_sem, portMAX_DELAY) == pdTRUE){
-            // Small delay to let the gesture register stabilize
-            vTaskDelay(pdMS_TO_TICKS(10));
-
-            // --- Read Gesture Register (0x01) ---
-            uint8_t reg_gesture = 0x01;
-            esp_err_t ret = i2c_master_transmit_receive(i2c_handle, &reg_gesture, 1, &gesture, 1, 1000);
-            if(ret != ESP_OK){
-                ESP_LOGW("TOUCH", "Failed to read gesture register");
-                continue;
-            }
-
-            // --- Handle Gestures ---
-            switch(gesture){
-                case 0x01: // Slide Up
-                    ESP_LOGI("TOUCH", "Swipe Up");
+// ------------------- Touch task -------------------
+static void touch_task(void *args) {
+    uint8_t num_fingers, xh, xl, yh, yl;
+    while (1) {
+        // Wait for ISR to tell us something happened
+        if (xSemaphoreTake(touch_sem, portMAX_DELAY) == pdTRUE) {
+            do {
+                // Read number of fingers
+                uint8_t reg = REG_FINGERS;
+                if (i2c_master_transmit_receive(i2c_dev, &reg, 1, &num_fingers, 1, 1000) != ESP_OK) {
+                    ESP_LOGW(TAG, "Failed to read fingers");
                     break;
-                case 0x02: // Slide Down
-                    ESP_LOGI("TOUCH", "Swipe Down");
-                    break;
-                case 0x03: // Swipe Left
-                    ESP_LOGI("TOUCH", "Swipe Left");
-                    break;
-                case 0x04: // Swipe Right
-                    ESP_LOGI("TOUCH", "Swipe Right");
-                    break;
-                case 0x05: // Single Click / Tap
-                case 0x0B: // Double Click
-                    {
-                        // --- Read X and Y coordinates ---
-                        uint8_t reg_xh = 0x03;
-                        uint8_t reg_xl = 0x04;
-                        uint8_t reg_yh = 0x05;
-                        uint8_t reg_yl = 0x06;
-
-                        if(i2c_master_transmit_receive(i2c_handle, &reg_xh, 1, &xh, 1, 1000) == ESP_OK &&
-                           i2c_master_transmit_receive(i2c_handle, &reg_xl, 1, &xl, 1, 1000) == ESP_OK &&
-                           i2c_master_transmit_receive(i2c_handle, &reg_yh, 1, &yh, 1, 1000) == ESP_OK &&
-                           i2c_master_transmit_receive(i2c_handle, &reg_yl, 1, &yl, 1, 1000) == ESP_OK){
-
-                            x = ((xh & 0x0F) << 8) | xl;
-                            y = ((yh & 0x0F) << 8) | yl;
-
-                            if(gesture == 0x05)
-                                ESP_LOGI("TOUCH", "Single Tap at X: %d Y: %d", x, y);
-                            else
-                                ESP_LOGI("TOUCH", "Double Tap at X: %d Y: %d", x, y);
-                        } else {
-                            ESP_LOGW("TOUCH", "Failed to read coordinates");
-                        }
+                }
+                
+                if (num_fingers > 0) {
+                    // Read coordinates
+                    uint8_t buf[4];
+                    reg = REG_XH;
+                    if (i2c_master_transmit_receive(i2c_dev, &reg, 1, buf, 4, 1000) == ESP_OK) {
+                        xh = buf[0];
+                        xl = buf[1];
+                        yh = buf[2];
+                        yl = buf[3];
+                        
+                        latest_x = ((xh & 0x0F) << 8) | xl;
+                        latest_y = ((yh & 0x0F) << 8) | yl;
+                        touch_down = true;
+                        
+                        ESP_LOGD(TAG, "Touch: x=%d, y=%d", latest_x, latest_y);
                     }
-                    break;
-                case 0x0C: // Long Press
-                    ESP_LOGI("TOUCH", "Long Press Detected");
-                    break;
-                default:
-                    break;
-            }
+                } else {
+                    touch_down = false;
+                }
+                vTaskDelay(pdMS_TO_TICKS(10)); // Small debounce
+            } while (num_fingers > 0);
         }
     }
 }
 
+// ------------------- LVGL callback -------------------
+void touch_read_callback(lv_indev_t *indev, lv_indev_data_t *data) {
+    (void)indev;
+    
+    data->point.x = latest_x;
+    data->point.y = latest_y;
+    data->state = touch_down ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;
+}
 
-
-//Initializes CST816S touch driver
-void touch_init(i2c_master_dev_handle_t i2c_handle){
-
-    //Create binary semaphore
+// ------------------- Init -------------------
+void touch_init(i2c_master_dev_handle_t i2c_handle) {
+    i2c_dev = i2c_handle;
+    
+    // Create semaphore
     touch_sem = xSemaphoreCreateBinary();
-    if(touch_sem == NULL){
-        ESP_LOGE("TOUCH", "Failed to create semaphore");
-    } 
-
-    //Reset CST816S
+    if (!touch_sem) {
+        ESP_LOGE(TAG, "Failed to create semaphore");
+        return;
+    }
+    
+    // Reset CST816S
     gpio_reset_pin(RST_PIN);
     gpio_set_direction(RST_PIN, GPIO_MODE_OUTPUT);
     gpio_set_level(RST_PIN, 1);
@@ -116,8 +103,8 @@ void touch_init(i2c_master_dev_handle_t i2c_handle){
     vTaskDelay(pdMS_TO_TICKS(10));
     gpio_set_level(RST_PIN, 1);
     vTaskDelay(pdMS_TO_TICKS(50));
-
-    //Configure INT pin and attach ISR
+    
+    // Configure INT pin
     gpio_reset_pin(INT_PIN);
     gpio_set_direction(INT_PIN, GPIO_MODE_INPUT);
     gpio_set_pull_mode(INT_PIN, GPIO_PULLUP_ONLY);
@@ -125,7 +112,23 @@ void touch_init(i2c_master_dev_handle_t i2c_handle){
     gpio_install_isr_service(0);
     gpio_isr_handler_add(INT_PIN, gpio_isr_handler, NULL);
     gpio_intr_enable(INT_PIN);
+    
+    // Start background task with smaller stack
+    xTaskCreate(touch_task, "touch_task", 2048, NULL, 8, NULL);
+    
+    // *** THIS IS THE MISSING PART ***
+    // Create LVGL input device (v9.3 API)
+    s_indev = lv_indev_create();
+    if (s_indev) {
+        lv_indev_set_type(s_indev, LV_INDEV_TYPE_POINTER);
+        lv_indev_set_read_cb(s_indev, touch_read_callback);
+        ESP_LOGI(TAG, "LVGL touch input device created successfully");
+    } else {
+        ESP_LOGE(TAG, "Failed to create LVGL input device");
+    }
+}
 
-    // Start FreeRTOS task to process touch events
-    xTaskCreate(touch_read, "touch_task", 4096, (void *)i2c_handle, 10, NULL);
+lv_indev_t* touch_get_indev(void)
+{
+    return s_indev;
 }

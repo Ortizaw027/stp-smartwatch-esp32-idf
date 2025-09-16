@@ -1,8 +1,7 @@
 idf_component_register(
     SRCS
         "main.c"                       
-        "ui/labels.c" 
-        "ui/screen.c"                    
+        "ui/ui.c"                     
         "drivers/lcd_driver.c"         
         "drivers/lvgl_tick.c"   
         "drivers/touch_driver.c" 

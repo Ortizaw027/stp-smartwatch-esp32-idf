@@ -24,7 +24,8 @@
     "esp_lcd_touch_cst816s.h": "c",
     "semphr.h": "c",
     "touch_driver.h": "c",
-    "i2c_master.h": "c"
+    "i2c_master.h": "c",
+    "stdio.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

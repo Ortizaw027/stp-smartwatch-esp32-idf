@@ -2,7 +2,7 @@
 #include "esp_log.h"
 #include "esp_sntp.h"
 #include "wifi.h"  
-#include "screen.h"
+//#include "screen.h"
 #include <stdbool.h>
 #include <sys/time.h>
 #include <string.h>
@@ -20,7 +20,7 @@ static void time_sync_cb(struct timeval *tv) {
     ESP_LOGI(TAG, "Time synchronized from SNTP");
 
     //Immediate update of watch face
-    update_home_screen_time();
+    //update_home_screen_time();
 }
 
 // Initializes SNTP without blocking
