@@ -6,19 +6,27 @@ idf_component_register(
         "drivers/lvgl_tick.c"   
         "drivers/touch_driver.c" 
         "drivers/i2c_scan.c"      
+        "drivers/imu_driver.c"
         "connectivity/wifi.c"          
         "connectivity/time_sync.c"     
         "fonts/inter_14.c"             
         "fonts/inter_20.c"
         "fonts/inter_32.c"
         "fonts/inter_48.c"
+        "features/step_counter.c"
+        "features/time_format.c"
+        "features/stopwatch.c"
+        "old_ui/labels.c"
+        "old_ui/screen.c"
         
     INCLUDE_DIRS
         "."                            
-        "ui"                           
+        "ui"                      
         "drivers"                      
         "connectivity"                 
-        "fonts"                        
+        "fonts"  
+        "features"                      
+        "old_ui"
         
     REQUIRES
         lvgl

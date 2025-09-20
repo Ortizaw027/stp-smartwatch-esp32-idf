@@ -8,6 +8,7 @@
 #include "time_sync.h"
 #include "touch_driver.h"
 #include "driver/i2c_master.h"
+#include "imu_driver.h"
 
 // I2C config
 #define I2C_NUM       I2C_NUM_0
@@ -82,6 +83,7 @@ void app_main(void)
     touch_init(touch_device_handle);
 
     // Initialize IMU 
+    imu_init(imu_device_handle);
 
     lv_indev_t *touch_indev = touch_get_indev();
     if (touch_indev) {
@@ -99,14 +101,23 @@ void app_main(void)
         ESP_LOGE(TAG, "SNTP failed to initialize");
     }
 
-    // Initialize UI (tiles, buttons)
+    // Initialize UI 
     ui_init();
     ESP_LOGI(TAG, "UI initialized successfully");
 
     // Main loop
     while (1) {
-        lv_timer_handler();                    // Handle LVGL tasks
-        vTaskDelay(pdMS_TO_TICKS(5));          // 5 ms delay
+        // Handle LVGL tasks
+        lv_timer_handler(); 
+       
+        // Reads raw data from IMU and sends it to a struct
+        imu_update(imu_device_handle);
+        
+        // Gets IMU data and puts it in imu_data
+        imu_data_t imu_data = imu_get_data();  
+
+        // 5 ms delay
+        vTaskDelay(pdMS_TO_TICKS(5));          
     }
 }
 

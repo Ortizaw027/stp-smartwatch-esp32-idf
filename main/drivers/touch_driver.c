@@ -26,7 +26,7 @@ static volatile int16_t latest_x = 0;
 static volatile int16_t latest_y = 0;
 static volatile bool touch_down = false;
 
-// ------------------- ISR -------------------
+// ISR
 static void IRAM_ATTR gpio_isr_handler(void *args) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     xSemaphoreGiveFromISR(touch_sem, &xHigherPriorityTaskWoken);
@@ -35,7 +35,7 @@ static void IRAM_ATTR gpio_isr_handler(void *args) {
     }
 }
 
-// ------------------- Touch task -------------------
+// Touch task
 static void touch_task(void *args) {
     uint8_t num_fingers, xh, xl, yh, yl;
     while (1) {
@@ -68,13 +68,13 @@ static void touch_task(void *args) {
                 } else {
                     touch_down = false;
                 }
-                vTaskDelay(pdMS_TO_TICKS(10)); // Small debounce
+                vTaskDelay(pdMS_TO_TICKS(10)); 
             } while (num_fingers > 0);
         }
     }
 }
 
-// ------------------- LVGL callback -------------------
+// LVGL callback
 void touch_read_callback(lv_indev_t *indev, lv_indev_data_t *data) {
     (void)indev;
     
@@ -83,7 +83,7 @@ void touch_read_callback(lv_indev_t *indev, lv_indev_data_t *data) {
     data->state = touch_down ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;
 }
 
-// ------------------- Init -------------------
+// Init
 void touch_init(i2c_master_dev_handle_t i2c_handle) {
     i2c_dev = i2c_handle;
     
@@ -116,7 +116,6 @@ void touch_init(i2c_master_dev_handle_t i2c_handle) {
     // Start background task with smaller stack
     xTaskCreate(touch_task, "touch_task", 2048, NULL, 8, NULL);
     
-    // *** THIS IS THE MISSING PART ***
     // Create LVGL input device (v9.3 API)
     s_indev = lv_indev_create();
     if (s_indev) {
