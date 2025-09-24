@@ -68,6 +68,11 @@ void imu_update(i2c_master_dev_handle_t dev) {
     latest_data.gx = (raw_data[9] << 8) | raw_data[8];
     latest_data.gy = (raw_data[11] << 8) | raw_data[10];
     latest_data.gz = (raw_data[13] << 8) | raw_data[12];
+
+    // Simple log for debugging raw values
+    ESP_LOGI(TAG, "AX: %d, AY: %d, AZ: %d | GX: %d, GY: %d, GZ: %d",
+             latest_data.ax, latest_data.ay, latest_data.az,
+             latest_data.gx, latest_data.gy, latest_data.gz);
     
 }
 

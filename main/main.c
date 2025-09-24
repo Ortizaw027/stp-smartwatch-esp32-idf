@@ -9,6 +9,7 @@
 #include "touch_driver.h"
 #include "driver/i2c_master.h"
 #include "imu_driver.h"
+#include "step_counter.h"
 
 // I2C config
 #define I2C_NUM       I2C_NUM_0
@@ -85,12 +86,16 @@ void app_main(void)
     // Initialize IMU 
     imu_init(imu_device_handle);
 
+    // Initialize step counter
+    step_counter_init();
+
+    // Retrieve the touch input device from the driver and enable it for LVGL
     lv_indev_t *touch_indev = touch_get_indev();
     if (touch_indev) {
         lv_indev_enable(touch_indev, true);
-        ESP_LOGI(TAG, "Touch input device registered successfully");
+        ESP_LOGI(TAG, "Touch input device pointer retrieved and enabled");
     } else {
-        ESP_LOGE(TAG, "Failed to register touch device");
+        ESP_LOGE(TAG, "Failed to enable touch input — driver returned NULL");
     }
 
     // Initialize SNTP
@@ -112,9 +117,9 @@ void app_main(void)
        
         // Reads raw data from IMU and sends it to a struct
         imu_update(imu_device_handle);
-        
-        // Gets IMU data and puts it in imu_data
-        imu_data_t imu_data = imu_get_data();  
+
+        // Updates the step counter
+     //   step_counter_update();
 
         // 5 ms delay
         vTaskDelay(pdMS_TO_TICKS(5));          
