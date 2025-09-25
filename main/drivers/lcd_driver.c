@@ -89,8 +89,8 @@ esp_lcd_panel_handle_t lcd_init(void)
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 #endif
 
-esp_lcd_panel_mirror(panel_handle, false, false);
-esp_lcd_panel_swap_xy(panel_handle, true);
+esp_lcd_panel_mirror(panel_handle, true, false);
+
 
 return panel_handle;
 }

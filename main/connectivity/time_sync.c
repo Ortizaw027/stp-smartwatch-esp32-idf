@@ -1,8 +1,7 @@
 #include "time_sync.h"
 #include "esp_log.h"
 #include "esp_sntp.h"
-#include "wifi.h"  
-//#include "screen.h"
+#include "wifi.h"
 #include <stdbool.h>
 #include <sys/time.h>
 #include <string.h>
@@ -10,20 +9,24 @@
 static const char *TAG = "TIME SYNC";
 static bool s_time_synced = false;
 
+// Check if time has been synchronized
 bool time_is_synced(void)
 {
     return s_time_synced;
 }
-// SNTP callback
-static void time_sync_cb(struct timeval *tv) {
-    s_time_synced = true;
-    ESP_LOGI(TAG, "Time synchronized from SNTP");
 
-    //Immediate update of watch face
-    //update_home_screen_time();
+// SNTP callback — called when time is synchronized
+static void time_sync_cb(struct timeval *tv) {
+    if (!s_time_synced) {
+        s_time_synced = true;
+        ESP_LOGI(TAG, "Time synchronized from SNTP");
+
+        // Switch SNTP to hourly updates after first sync
+        esp_sntp_set_sync_interval(3600 * 1000); // 1 hour in milliseconds
+    }
 }
 
-// Initializes SNTP without blocking
+// Initialize SNTP without blocking
 esp_err_t time_sync_init(void)
 {
     // Make sure Wi-Fi is connected first
@@ -32,15 +35,18 @@ esp_err_t time_sync_init(void)
         return ESP_FAIL;
     }
 
-    // Initialize SNTP (asynchronous)
+    // Set timezone immediately (no blocking)
+    setenv("TZ", "EST5EDT,M3.2.0/2,M11.1.0", 1);
+    tzset();
+
+    // Initialize SNTP
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
     esp_sntp_setservername(0, "pool.ntp.org");
     esp_sntp_set_time_sync_notification_cb(time_sync_cb);
     esp_sntp_init();
 
-    // Set timezone immediately (no blocking)
-    setenv("TZ", "EST5EDT,M3.2.0/2,M11.1.0", 1);
-    tzset();
+    // Fast retry until first sync (10 seconds)
+    esp_sntp_set_sync_interval(10 * 1000); // 10 seconds in milliseconds
 
     ESP_LOGI(TAG, "SNTP initialized, time will sync asynchronously");
 

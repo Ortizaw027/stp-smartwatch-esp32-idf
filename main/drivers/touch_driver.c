@@ -84,26 +84,38 @@ void touch_read_callback(lv_indev_t *indev, lv_indev_data_t *data) {
 }
 
 // Init
-void touch_init(i2c_master_dev_handle_t i2c_handle) {
+void touch_init(i2c_master_dev_handle_t i2c_handle)
+{
     i2c_dev = i2c_handle;
+    if (i2c_dev == NULL) {
+        ESP_LOGW(TAG, "I2C handle is NULL, skipping touch init");
+        return;
+    }
+
+    // Reset CST816S properly
+    gpio_reset_pin(RST_PIN);
+    gpio_set_direction(RST_PIN, GPIO_MODE_OUTPUT);
     
+    // Apply active-low reset pulse
+    gpio_set_level(RST_PIN, 0);
+    vTaskDelay(pdMS_TO_TICKS(10));   // 10 ms pulse
+    gpio_set_level(RST_PIN, 1);
+    vTaskDelay(pdMS_TO_TICKS(50));   // Wait for the chip to start
+
+    // Check if the device responds on I2C
+    uint8_t check;
+    if (i2c_master_receive(i2c_dev, &check, 1, 10000) != ESP_OK) {
+        ESP_LOGW(TAG, "Touch controller did not respond, skipping driver init");
+        return;
+    }
+
     // Create semaphore
     touch_sem = xSemaphoreCreateBinary();
     if (!touch_sem) {
         ESP_LOGE(TAG, "Failed to create semaphore");
         return;
     }
-    
-    // Reset CST816S
-    gpio_reset_pin(RST_PIN);
-    gpio_set_direction(RST_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(RST_PIN, 1);
-    vTaskDelay(pdMS_TO_TICKS(50));
-    gpio_set_level(RST_PIN, 0);
-    vTaskDelay(pdMS_TO_TICKS(10));
-    gpio_set_level(RST_PIN, 1);
-    vTaskDelay(pdMS_TO_TICKS(50));
-    
+
     // Configure INT pin
     gpio_reset_pin(INT_PIN);
     gpio_set_direction(INT_PIN, GPIO_MODE_INPUT);
@@ -112,11 +124,11 @@ void touch_init(i2c_master_dev_handle_t i2c_handle) {
     gpio_install_isr_service(0);
     gpio_isr_handler_add(INT_PIN, gpio_isr_handler, NULL);
     gpio_intr_enable(INT_PIN);
-    
-    // Start background task with smaller stack
+
+    // Start background task
     xTaskCreate(touch_task, "touch_task", 2048, NULL, 8, NULL);
-    
-    // Create LVGL input device (v9.3 API)
+
+    // Create LVGL input device
     s_indev = lv_indev_create();
     if (s_indev) {
         lv_indev_set_type(s_indev, LV_INDEV_TYPE_POINTER);
@@ -125,7 +137,10 @@ void touch_init(i2c_master_dev_handle_t i2c_handle) {
     } else {
         ESP_LOGE(TAG, "Failed to create LVGL input device");
     }
+
+    ESP_LOGI(TAG, "Touch controller initialized successfully");
 }
+
 
 lv_indev_t* touch_get_indev(void)
 {

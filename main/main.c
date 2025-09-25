@@ -10,6 +10,7 @@
 #include "driver/i2c_master.h"
 #include "imu_driver.h"
 #include "step_counter.h"
+#include "i2c_scan.h"
 
 // I2C config
 #define I2C_NUM       I2C_NUM_0
@@ -26,6 +27,9 @@
 #define BYTES_PER_PIXEL  2
 #define DISP_BUF_SIZE    ((DISP_HOR_RES * DISP_VER_RES) / DISP_BUF_FACTOR * BYTES_PER_PIXEL)
 
+// IMU update interval (in main loop cycles)
+#define IMU_UPDATE_INTERVAL 10  // 10 * 5ms = 50ms updates
+
 static const char* TAG = "MAIN";
 
 static i2c_master_bus_handle_t i2c_bus_handle = NULL;
@@ -39,8 +43,13 @@ void app_main(void)
 {
     ESP_LOGI(TAG, "Starting app_main, free heap: %" PRIu32, (uint32_t)esp_get_free_heap_size());
 
-    // Increase task stack if needed (only if main is manually created)
-    // Otherwise configure in menuconfig -> FreeRTOS -> Main task stack size
+    // Initialize SNTP 
+    ESP_LOGI(TAG, "Initializing SNTP...");
+    if(time_sync_init() == ESP_OK) {
+        ESP_LOGI(TAG, "SNTP initialized successfully");
+    } else {
+        ESP_LOGE(TAG, "SNTP failed to initialize");
+    }
 
     // Initialize LVGL
     lv_init();
@@ -49,11 +58,11 @@ void app_main(void)
     // Initialize LCD
     esp_lcd_panel_handle_t panel_handle = lcd_init();
     ESP_LOGI(TAG, "LCD initialized.");
-
-    // Initialize I2C
+    
+    // Initialize I2C after time sync
     init_i2c();
+    scan_i2c(i2c_bus_handle);
    
-
     // Allocate LVGL display buffers on the heap
     uint8_t *buf1 = heap_caps_malloc(DISP_BUF_SIZE, MALLOC_CAP_DMA);
     uint8_t *buf2 = heap_caps_malloc(DISP_BUF_SIZE, MALLOC_CAP_DMA);
@@ -84,10 +93,10 @@ void app_main(void)
     touch_init(touch_device_handle);
 
     // Initialize IMU 
-    imu_init(imu_device_handle);
+    //imu_init(imu_device_handle);
 
     // Initialize step counter
-    step_counter_init();
+   // step_counter_init();
 
     // Retrieve the touch input device from the driver and enable it for LVGL
     lv_indev_t *touch_indev = touch_get_indev();
@@ -98,28 +107,27 @@ void app_main(void)
         ESP_LOGE(TAG, "Failed to enable touch input — driver returned NULL");
     }
 
-    // Initialize SNTP
-    ESP_LOGI(TAG, "Initializing SNTP...");
-    if(time_sync_init() == ESP_OK) {
-        ESP_LOGI(TAG, "SNTP initialized successfully");
-    } else {
-        ESP_LOGE(TAG, "SNTP failed to initialize");
-    }
-
     // Initialize UI 
     ui_init();
-    ESP_LOGI(TAG, "UI initialized successfully");
+
+    // Counter for IMU updates to reduce I2C bus load
+    int imu_counter = 0;
 
     // Main loop
     while (1) {
         // Handle LVGL tasks
         lv_timer_handler(); 
        
-        // Reads raw data from IMU and sends it to a struct
-        imu_update(imu_device_handle);
+        // Update IMU less frequently to prevent I2C bus congestion
+        imu_counter++;
+        if (imu_counter >= IMU_UPDATE_INTERVAL) {
+            // Only update IMU every 50ms instead of every 5ms
+            imu_update(imu_device_handle);
+            imu_counter = 0;
+        }
 
         // Updates the step counter
-     //   step_counter_update();
+        // step_counter_update();
 
         // 5 ms delay
         vTaskDelay(pdMS_TO_TICKS(5));          
