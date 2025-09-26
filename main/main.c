@@ -93,10 +93,10 @@ void app_main(void)
     touch_init(touch_device_handle);
 
     // Initialize IMU 
-    //imu_init(imu_device_handle);
+    imu_init(imu_device_handle);
 
     // Initialize step counter
-   // step_counter_init();
+    step_counter_init();
 
     // Retrieve the touch input device from the driver and enable it for LVGL
     lv_indev_t *touch_indev = touch_get_indev();
@@ -123,11 +123,12 @@ void app_main(void)
         if (imu_counter >= IMU_UPDATE_INTERVAL) {
             // Only update IMU every 50ms instead of every 5ms
             imu_update(imu_device_handle);
+
+            // Updates the step counter
+            step_counter_update();
+            
             imu_counter = 0;
         }
-
-        // Updates the step counter
-        // step_counter_update();
 
         // 5 ms delay
         vTaskDelay(pdMS_TO_TICKS(5));          

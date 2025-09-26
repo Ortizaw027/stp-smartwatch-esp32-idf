@@ -1,49 +1,117 @@
 # STP Smartwatch Firmware
 
-This repository contains the firmware for the STP smartwatch, designed for the ESP32-S3-Touch-LCD-1.28 development board. The firmware is written in C using the ESP-IDF framework and utilizes the LVGL graphics library to provide a responsive, touch-enabled user interface.
-
-The watch features include basic timekeeping, fitness tracker, and a stopwatch. It runs on FreeRTOS for efficient multitasking and supports low-power sleep modes. The project aims to deliver a modular, easy-to-understand codebase that can be extended or adapted for personal use.
+The STP Smartwatch is a compact, wearable device built on the **ESP32-S3-Touch-LCD-1.28 development board**. This firmware provides a fully functional touchscreen interface, step tracking, a stopwatch, and battery monitoring. It is designed with modular, readable code, allowing users to easily adapt it as firmware for their own boards or reuse portions of the code for personal projects and experimentation.
+---
 
 ## Features
 
-- **Real-Time Clock**: Displays the current time using the internal RTC or synchronized source.
-- **Graphical UI**: Built using LVGL with support for smooth screen transitions and swiping between pages.
-- **Step Counter**: Using the IMU it tracks the wearers steps.
-- **Stopwatch**: Start, pause, and reset functionality with visual feedback.
-- **Touch Input**: Navigate the UI using the capacitive touch screen with swipe gesture recognition.
-- **FreeRTOS Integration**: All tasks are handled through a real-time operating system for concurrency and responsiveness.
-- **Low Power Modes**: Screen timeout and sleep logic implemented to preserve battery life.
-- **Modular Codebase**: Peripherals and UI components are modularized for easier extension and maintenance.
+### Real-Time Clock
+Displays the current time on your watch using either the internal clock or synchronized network time. Always shows the correct hour and minute in a simple, readable format.
 
-## Hardware Setup
+### Graphical User Interface
+Smooth, visually appealing screens built with LVGL. Navigate between different “tiles” or pages using swipe gestures on the touchscreen.
 
-The firmware is designed specifically for the [ESP32-S3-Touch-LCD-1.28 development board](https://www.espressif.com/en/products/devkits/esp32-s3-touch-lcd-128), which includes:
+### Touch Input
+Capacitive touch allows easy interaction. Swipe to switch screens and interact with watch features without buttons.
 
-- An ESP32-S3 microcontroller with integrated Wi-Fi and Bluetooth.
-- A 1.28-inch round GC9A01 LCD display with touch input.
-- Onboard IMU sensor for motion and gesture detection.
-- Backlight control via a dedicated GPIO pin.
-- USB-C interface for power and programming.
+### Step Counter
+Counts your steps using the built-in accelerometer/gyroscope. Tracks motion when worn on your wrist to estimate daily activity.
 
-All necessary GPIO pins and peripheral configurations for the display, touch controller, and IMU are defined in the source code, matching the board’s schematic.
-## Getting Started
+### Stopwatch
+Simple start, pause, and reset functionality. Provides visual feedback directly on the watch screen.
 
-### Hardware Requirements
+### Battery Percentage Display
+Shows the battery level on all screens in a consistent position above the main content. Updates in real-time so you know when to recharge.
 
-This firmware is designed specifically for the **ESP32-S3** microcontroller and tested on the [ESP32-S3 Dev Board](https://www.espressif.com/en/products/devkits/esp32-s3-devkitc-1). It relies on the following hardware components:
+### Modular Codebase
+Drivers and UI components are separated to make the code easier to understand, maintain, and extend.
 
-- ESP32-S3 chip  
-- GC9A01 display controller with SPI interface  
-- Compatible touch sensor hardware (as implemented in this project)  
-- Onboard GPIO pin configuration matching the dev board  
-
-**Important:** This project is *not* guaranteed to work on other ESP32 variants (such as ESP32, ESP32-C3, or ESP32-S2) or on boards with different peripherals or pin configurations without modification.
+### I2C Bus Communication
+Efficiently handles multiple devices (touch controller and IMU sensor) using the I2C protocol.
 
 ---
-## Building from Source
-COMING SOON
+
+## Hardware Requirements
+
+- **ESP32-S3 microcontroller** with integrated Wi-Fi/Bluetooth  
+- **1.28-inch round GC9A01 LCD display** with touchscreen  
+- **CST816S capacitive touch controller**  
+- **Onboard IMU sensor** for motion detection and step tracking  
+- USB-C connection for power and flashing  
+
+> ⚠️ This firmware is designed specifically for the ESP32-S3-Touch-LCD-1.28 development board and may not work on other ESP32 variants without modification.
+
+---
+
+## Project Structure
+C:.
+| CMakeLists.txt # Builds the firmware and sets project configuration
+| idf_component.yml # ESP-IDF metadata describing this project as a component
+| main.c # Entry point for firmware; sets up peripherals, UI, and main loop
+| project_tree.txt # Text version of the project tree (for reference)
+|
++---connectivity
+| time_sync.c / .h # Handles SNTP/RTC time synchronization
+| wifi.c / .h # Connects the board to Wi-Fi networks
+| wifi_config_local.h # Local Wi-Fi credentials and configuration
+|
++---drivers
+| i2c_scan.c / .h # Utility to detect devices on the I2C bus
+| imu_driver.c / .h # Interfaces with IMU to read motion data
+| lcd_driver.c / .h # Drives the GC9A01 display (initialization & updates)
+| lvgl_tick.c / .h # Provides millisecond tick for LVGL timing
+| touch_driver.c / .h # Reads touch input from the CST816S controller
+|
++---features
+| battery_percentage.c / .h # Reads ADC to show battery charge level
+| step_counter.c / .h # Calculates and tracks steps using IMU data
+| stopwatch.c / .h # Implements stopwatch functionality (start/pause/reset)
+|
++---fonts
+| fonts.h # Declares font resources
+| inter_14.c # 14px font used in the UI
+| inter_20.c # 20px font used in the UI
+| inter_32.c # 32px font used in the UI
+| inter_48.c # 48px font used in the UI
+|
++---old_ui
+| labels.c / .h # Legacy UI labels used in early testing
+| screen.c / .h # Legacy screen layout; did not support swipe gestures
+|
+---ui
+ui.c / .h # Current LVGL-based UI system with tiles, swipe, and battery display
+
+---
+
+## Flashing Instructions
+
+1. Install the [ESP-IDF framework](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/get-started/index.html) on your computer.  
+2. Connect your ESP32-S3 board via USB-C.  
+3. Open a terminal in the firmware project directory.  
+4. Configure the project (adjust serial port if necessary):  
+   ```bash
+   idf.py set-target esp32s3
+   idf.py menuconfig
+5. Build the firmware:
+   ```bash
+   idf.py build
+6. Flash the firmware to the board:
+   ```bash
+   idf.py flash
+7. Monitor the output to ensure it boots correctly:
+   ```bash
+   idf.py monitor
+8. After flashing, the watch should start displaing the default UI
+
+---
+
+## Demo
+
+Insert the demo video of it working here
+
+---
 
 ## License
+ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
+ ---

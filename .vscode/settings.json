@@ -25,7 +25,8 @@
     "semphr.h": "c",
     "touch_driver.h": "c",
     "i2c_master.h": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "imu_driver.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

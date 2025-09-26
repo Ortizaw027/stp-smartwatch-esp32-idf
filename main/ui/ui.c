@@ -4,6 +4,7 @@
 #include "stopwatch.h"
 #include "fonts.h"
 #include "time_sync.h"
+#include "step_counter.h"
 
 static const char* TAG = "UI";
 
@@ -23,6 +24,10 @@ static lv_obj_t *battery_cont;
 static lv_obj_t *battery_icon;
 static lv_obj_t *battery_label;
 
+// --- Step counter LVGL objects ---
+static lv_obj_t *step_label = NULL;
+static lv_obj_t *btn_step_reset = NULL;
+
 // --- Start/Stop button callback ---
 static void start_stop_cb(lv_event_t * e) {
     stopwatch_toggle();
@@ -41,9 +46,22 @@ static void reset_cb(lv_event_t * e) {
     if(btn_start_stop) lv_label_set_text(lv_obj_get_child(btn_start_stop, 0), "Start");
 }
 
+// --- Step counter reset button callback ---
+static void step_reset_cb(lv_event_t * e) {
+    step_counter_reset();
+    if(step_label) lv_label_set_text_fmt(step_label, "Steps: %d", step_counter_get_count());
+}
+
 // --- LVGL timer to update stopwatch display ---
 static void stopwatch_update_timer_cb(lv_timer_t *timer) {
     if(stopwatch_label) lv_label_set_text(stopwatch_label, stopwatch_get_time_str());
+}
+
+// --- LVGL timer to update step counter display ---
+static void step_update_timer_cb(lv_timer_t *timer) {
+    if(step_label) {
+        lv_label_set_text_fmt(step_label, "Steps: %d", step_counter_get_count());
+    }
 }
 
 // --- LVGL timer to update watch label ---
@@ -84,6 +102,31 @@ static void tileview_event_cb(lv_event_t * e) {
             ESP_LOGI(TAG, "Tileview changed to tile index: %d", tile_index);
         }
     }
+}
+
+// --- Create Tile 1 step counter ---
+static void create_tile1_step_counter(lv_obj_t *tile1) {
+    ESP_LOGI(TAG, "Creating tile1 step counter...");
+
+    step_label = lv_label_create(tile1);
+    lv_label_set_text(step_label, "Steps: 0");
+    lv_obj_set_style_text_font(step_label, &inter_48, 0);
+    lv_obj_set_style_text_color(step_label, lv_color_white(), 0);
+    lv_obj_align(step_label, LV_ALIGN_CENTER, 0, -30);
+
+    btn_step_reset = lv_button_create(tile1);
+    lv_obj_set_size(btn_step_reset, 120, 50);
+    lv_obj_align(btn_step_reset, LV_ALIGN_CENTER, 0, 40);
+    lv_obj_add_event_cb(btn_step_reset, step_reset_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *btn_label = lv_label_create(btn_step_reset);
+    lv_label_set_text(btn_label, "Reset");
+    lv_obj_center(btn_label);
+
+    // Timer to refresh step count
+    lv_timer_create(step_update_timer_cb, 1000, NULL);
+
+    ESP_LOGI(TAG, "Tile1 step counter created successfully");
 }
 
 // --- Create Tile 3 stopwatch ---
@@ -169,12 +212,8 @@ void ui_init(void) {
     lv_obj_set_style_bg_color(tile3, lv_color_hex(0x2104), 0);
     lv_obj_set_style_bg_opa(tile3, LV_OPA_COVER, 0);
 
-    // --- Tile1 content ---
-    lv_obj_t *label1 = lv_label_create(tile1);
-    lv_label_set_text(label1, "TILE 1\nRED\nSwipe right ->");
-    lv_obj_set_style_text_color(label1, lv_color_white(), 0);
-    lv_obj_set_style_text_align(label1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_center(label1);
+    // --- Tile1 step counter ---
+    create_tile1_step_counter(tile1);
 
     // --- Tile2 watch ---
     watch_label = lv_label_create(tile2);

@@ -1,0 +1,19 @@
+dependencies:
+  espp/format: '>=1.0'
+  idf:
+    version: '>=5.0'
+description: Logger component for ESP-IDF
+documentation: https://esp-cpp.github.io/espp/logger.html#logger
+license: MIT
+maintainers:
+- William Emfinger <waemfinger@gmail.com>
+repository: git://github.com/esp-cpp/espp.git
+repository_info:
+  commit_sha: d1d5a8b0b316c32e0b40106fb237c251048896fa
+  path: components/logger
+tags:
+- cpp
+- Component
+- Logging
+url: https://github.com/esp-cpp/espp/tree/main/components/logger
+version: 1.0.24
