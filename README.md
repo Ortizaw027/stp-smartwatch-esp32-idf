@@ -1,4 +1,4 @@
-# STP Smartwatch Firmware
+## STP Smartwatch Firmware
 
 The STP Smartwatch is a compact, wearable device built on the **ESP32-S3-Touch-LCD-1.28 development board**. This firmware provides a fully functional touchscreen interface, step tracking, a stopwatch, and battery monitoring. It is designed with modular, readable code, allowing users to easily adapt it as firmware for their own boards or reuse portions of the code for personal projects and experimentation.
 ---
@@ -44,42 +44,45 @@ Efficiently handles multiple devices (touch controller and IMU sensor) using the
 ---
 
 ## Project Structure
+
+```
 C:.
-| CMakeLists.txt # Builds the firmware and sets project configuration
-| idf_component.yml # ESP-IDF metadata describing this project as a component
-| main.c # Entry point for firmware; sets up peripherals, UI, and main loop
-| project_tree.txt # Text version of the project tree (for reference)
-|
-+---connectivity
-| time_sync.c / .h # Handles SNTP/RTC time synchronization
-| wifi.c / .h # Connects the board to Wi-Fi networks
-| wifi_config_local.h # Local Wi-Fi credentials and configuration
-|
-+---drivers
-| i2c_scan.c / .h # Utility to detect devices on the I2C bus
-| imu_driver.c / .h # Interfaces with IMU to read motion data
-| lcd_driver.c / .h # Drives the GC9A01 display (initialization & updates)
-| lvgl_tick.c / .h # Provides millisecond tick for LVGL timing
-| touch_driver.c / .h # Reads touch input from the CST816S controller
-|
-+---features
-| battery_percentage.c / .h # Reads ADC to show battery charge level
-| step_counter.c / .h # Calculates and tracks steps using IMU data
-| stopwatch.c / .h # Implements stopwatch functionality (start/pause/reset)
-|
-+---fonts
-| fonts.h # Declares font resources
-| inter_14.c # 14px font used in the UI
-| inter_20.c # 20px font used in the UI
-| inter_32.c # 32px font used in the UI
-| inter_48.c # 48px font used in the UI
-|
-+---old_ui
-| labels.c / .h # Legacy UI labels used in early testing
-| screen.c / .h # Legacy screen layout; did not support swipe gestures
-|
----ui
-ui.c / .h # Current LVGL-based UI system with tiles, swipe, and battery display
+│   CMakeLists.txt                    # Builds the firmware and sets project configuration
+│   idf_component.yml                 # ESP-IDF metadata describing this project as a component
+│   main.c                           # Entry point for firmware; sets up peripherals, UI, and main loop
+│   project_tree.txt                 # Text version of the project tree (for reference)
+│
+├── connectivity
+│   ├── time_sync.c / .h             # Handles SNTP/RTC time synchronization
+│   ├── wifi.c / .h                  # Connects the board to Wi-Fi networks
+│   └── wifi_config_local.h          # Local Wi-Fi credentials and configuration
+│
+├── drivers
+│   ├── i2c_scan.c / .h              # Utility to detect devices on the I2C bus
+│   ├── imu_driver.c / .h            # Interfaces with IMU to read motion data
+│   ├── lcd_driver.c / .h            # Drives the GC9A01 display (initialization & updates)
+│   ├── lvgl_tick.c / .h             # Provides millisecond tick for LVGL timing
+│   └── touch_driver.c / .h          # Reads touch input from the CST816S controller
+│
+├── features
+│   ├── battery_percentage.c / .h    # Reads ADC to show battery charge level
+│   ├── step_counter.c / .h          # Calculates and tracks steps using IMU data
+│   └── stopwatch.c / .h             # Implements stopwatch functionality (start/pause/reset)
+│
+├── fonts
+│   ├── fonts.h                      # Declares font resources
+│   ├── inter_14.c                   # 14px font used in the UI
+│   ├── inter_20.c                   # 20px font used in the UI
+│   ├── inter_32.c                   # 32px font used in the UI
+│   └── inter_48.c                   # 48px font used in the UI
+│
+├── old_ui
+│   ├── labels.c / .h                # Legacy UI labels used in early testing
+│   └── screen.c / .h                # Legacy screen layout; did not support swipe gestures
+│
+└── ui
+    ├── ui.c / .h                    # Current LVGL-based UI system with tiles, swipe, and battery display
+```
 
 ---
 
