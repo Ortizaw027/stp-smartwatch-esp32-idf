@@ -87,10 +87,12 @@ static void battery_monitor_task(void *arg)
         int percent = battery_voltage_to_percent(voltage);
         
         if (percent != last_percent) {
+        // Only update if percentage decreased or this is first reading(Battery percentage was flucuating a lot)
+        if (last_percent == -1 || percent < last_percent) {
             last_percent = percent;
-            // Update UI
             ui_update_battery(percent);
-        }
+    }
+}
         
         // 30 sec interval
         vTaskDelay(pdMS_TO_TICKS(30000));
