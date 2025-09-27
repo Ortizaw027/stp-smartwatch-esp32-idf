@@ -17,7 +17,7 @@ static adc_cali_handle_t cali_handle = NULL;
 static TaskHandle_t battery_task_handle = NULL;
 
 // Voltage divider scaling factor (measured)
-#define BATTERY_DIVIDER_SCALE 1.418f
+#define BATTERY_DIVIDER_SCALE 3.5f
 
 // ADC channel
 #define BATTERY_ADC_CHANNEL ADC_CHANNEL_0
@@ -47,21 +47,21 @@ void battery_adc_init(void)
     ESP_LOGI(TAG, "Battery ADC initialized (GPIO1 -> ADC1_CH0)");
 }
 
-// Read battery voltage in mV
+// Read battery voltage in volts
 float battery_adc_read_voltage(void)
 {
     int raw = 0;
     int voltage_mv = 0;
-
     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, BATTERY_ADC_CHANNEL, &raw));
     ESP_ERROR_CHECK(adc_cali_raw_to_voltage(cali_handle, raw, &voltage_mv));
-
-    float battery_voltage = voltage_mv * BATTERY_DIVIDER_SCALE; 
+    
+    float battery_voltage = (voltage_mv * BATTERY_DIVIDER_SCALE) / 1000.0f;
+    
     ESP_LOGI(TAG, "ADC raw: %d, Calibrated: %d mV, Battery: %.2f V",
-             raw, voltage_mv, battery_voltage / 1000.0f);
+             raw, voltage_mv, battery_voltage);
 
-    // In mV
-    return battery_voltage; 
+    // Return in volts
+    return battery_voltage;
 }
 
 // Convert voltage to percentage
@@ -69,10 +69,10 @@ static int battery_voltage_to_percent(float voltage)
 {
     const float min_v = 3.0f;  // 0%
     const float max_v = 4.2f;  // 100%
-
+    
     if (voltage <= min_v) return 0;
     if (voltage >= max_v) return 100;
-
+    
     return (int)((voltage - min_v) / (max_v - min_v) * 100.0f);
 }
 
@@ -80,21 +80,20 @@ static int battery_voltage_to_percent(float voltage)
 static void battery_monitor_task(void *arg)
 {
     int last_percent = -1;
-
+    
     while (1)
     {
         float voltage = battery_adc_read_voltage();
         int percent = battery_voltage_to_percent(voltage);
-
+        
         if (percent != last_percent) {
             last_percent = percent;
-
             // Update UI
-            ui_update_battery(percent); 
+            ui_update_battery(percent);
         }
-
+        
         // 30 sec interval
-        vTaskDelay(pdMS_TO_TICKS(30000)); 
+        vTaskDelay(pdMS_TO_TICKS(30000));
     }
 }
 

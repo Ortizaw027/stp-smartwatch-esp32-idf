@@ -181,7 +181,7 @@ static void create_battery_status(void) {
     lv_obj_set_style_text_color(battery_icon, lv_color_white(), 0);
 
     battery_label = lv_label_create(battery_cont);
-    lv_label_set_text(battery_label, "75%");
+    lv_label_set_text(battery_label, "%");
     lv_obj_set_style_text_color(battery_label, lv_color_white(), 0);
     lv_obj_align_to(battery_label, battery_icon, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
 }
