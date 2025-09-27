@@ -18,6 +18,6 @@ void init_lvgl_tick(void)
     };
     ESP_ERROR_CHECK(esp_timer_create(&timer_args, &lvgl_timer));
 
-    //Start the timer periodically(1 milli sec = 1000us)
+    // Start the timer periodically(1 milli sec = 1000us)
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_timer, 1000));
 }

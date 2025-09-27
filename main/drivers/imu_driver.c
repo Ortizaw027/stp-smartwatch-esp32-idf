@@ -28,31 +28,39 @@ void imu_init(i2c_master_dev_handle_t dev) {
     uint8_t data[2];
     
     // Check WHO_AM_I (should return 0x05)
-    data[0] = 0x00; // WHO_AM_I register
+    // WHO_AM_I register
+    data[0] = 0x00; 
     i2c_master_transmit(dev, data, 1, -1);
     uint8_t who_am_i;
     i2c_master_receive(dev, &who_am_i, 1, -1);
     ESP_LOGI(TAG, "WHO_AM_I: 0x%02X", who_am_i);
     
-    // 2. Configure registers
-    data[0] = 0x02; data[1] = 0x60; // CTRL1: auto-increment + little endian
+    // Configure registers
+
+    // CTRL1: auto-increment + little endian
+    data[0] = 0x02; data[1] = 0x60; 
     i2c_master_transmit(dev, data, 2, -1);
     
-    data[0] = 0x03; data[1] = 0x15; // CTRL2: ±4g + 235Hz
+    // CTRL2: ±4g + 235Hz
+    data[0] = 0x03; data[1] = 0x15;
     i2c_master_transmit(dev, data, 2, -1);
     
-    data[0] = 0x04; data[1] = 0x55; // CTRL3: ±512dps + 235Hz  
+    // CTRL3: ±512dps + 235Hz  
+    data[0] = 0x04; data[1] = 0x55; 
     i2c_master_transmit(dev, data, 2, -1);
     
-    data[0] = 0x08; data[1] = 0x03; // CTRL7: Enable accel + gyro
+    // CTRL7: Enable accel + gyro
+    data[0] = 0x08; data[1] = 0x03; 
     i2c_master_transmit(dev, data, 2, -1);
     
-    vTaskDelay(pdMS_TO_TICKS(100)); // Wait for startup
+    // Wait for startup
+    vTaskDelay(pdMS_TO_TICKS(100)); 
     ESP_LOGI(TAG, "IMU configured");
 }
 
 void imu_update(i2c_master_dev_handle_t dev) {
-    uint8_t start_reg = 0x33; // Start from TEMP_L
+    // Start from TEMP_L
+    uint8_t start_reg = 0x33; 
     uint8_t raw_data[14];
     
     // Set read pointer
@@ -77,5 +85,7 @@ void imu_update(i2c_master_dev_handle_t dev) {
 }
 
 imu_data_t imu_get_data(void){
-    return latest_data; // Returns copy of latest_data
+
+    // Returns copy of latest_data
+    return latest_data; 
 }

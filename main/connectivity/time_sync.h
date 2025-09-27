@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-//For instant time update on startup
+// For instant time update on startup
 bool time_is_synced(void); 
 
 // Initializes SNTP and syncs time

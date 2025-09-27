@@ -17,12 +17,16 @@
 #define WIFI_FAIL     BIT1
 #define MAX_FAILURES     5
 
-static EventGroupHandle_t wifi_event_group;  // FreeRTOS event group to wait for wifi success/fail
-static int s_retry_num = 0;                  // Count of reconnect attempts
-static const char *TAG = "WIFI";            //Logging tag
+// FreeRTOS event group to wait for wifi success/fail
+static EventGroupHandle_t wifi_event_group;
 
+// Count of reconnect attempts  
+static int s_retry_num = 0;          
 
-//Event handler for wifi events
+// Logging tag
+static const char *TAG = "WIFI";           
+
+// Event handler for wifi events
 static void wifi_event_handler(void* args, esp_event_base_t event_base,
                                  int32_t event_id, void* event_data)
 {
@@ -47,7 +51,7 @@ static void wifi_event_handler(void* args, esp_event_base_t event_base,
     }
 }
 
-//Event handler for ip events
+// Event handler for ip events
 static void ip_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
@@ -65,7 +69,7 @@ esp_err_t connect_wifi()
 {
     esp_err_t status = WIFI_FAIL;
 
-     //Initialize NVS
+     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
       ESP_ERROR_CHECK(nvs_flash_erase());
@@ -73,20 +77,20 @@ esp_err_t connect_wifi()
     }
     ESP_ERROR_CHECK(ret);
 
-    //init the esp network interface
+    // Initialize the esp network interface
     ESP_ERROR_CHECK(esp_netif_init());
 
-    //init default esp event loop
+    // Initialize default esp event loop
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    //create wifi station in the wifi driver
+    // Create wifi station in the wifi driver
     esp_netif_create_default_wifi_sta();
 
-    //setup wifi station with the default wifi cofiguration
+    // Setup wifi station with the default wifi cofiguration
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    //Create Event Loop
+    // Create Event Loop
     wifi_event_group = xEventGroupCreate();
 
     esp_event_handler_instance_t wifi_handler_event_instance;
@@ -102,7 +106,7 @@ esp_err_t connect_wifi()
                                                         NULL,
                                                         &got_ip_event_instance));
   
-    //Begin the start of the wifi driver
+    // Begin the start of the wifi driver
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = WIFI_SSID,                        // You must replace this with your Wi-Fi's SSID or it wont connect
@@ -115,25 +119,25 @@ esp_err_t connect_wifi()
         },
     };
 
-    //Set the wifi controller to be a station
+    // Set the wifi controller to be a station
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 
-    //Set the wifi config
+    // Set the wifi config
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
 
-    //Start the wifi driver
+    // Start the wifi driver
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "STA intialization completed");
 
-    //Wait
+    // Wait
     EventBits_t bits = xEventGroupWaitBits(wifi_event_group,
             WIFI_SUCCESS | WIFI_FAIL,
             pdFALSE,
             pdFALSE,
             portMAX_DELAY);
 
-    //test which event happened
+    // Test which event happened
     if (bits & WIFI_SUCCESS)
     {
         ESP_LOGI(TAG, "Connected to AP");

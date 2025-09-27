@@ -6,4 +6,4 @@
 void ui_init(void);
 
 // Update the battery percentage (0-100)
-void ui_update_battery(void);
+void ui_update_battery(int percentage);

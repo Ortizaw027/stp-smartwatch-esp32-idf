@@ -186,6 +186,30 @@ static void create_battery_status(void) {
     lv_obj_align_to(battery_label, battery_icon, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
 }
 
+// --- Update battery percentage on screen ---
+void ui_update_battery(int percentage)
+{
+    if(!battery_label || !battery_icon) return;
+
+    // Update text
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d%%", percentage);
+    lv_label_set_text(battery_label, buf);
+
+    // Update icon based on level
+    if(percentage > 80) {
+        lv_label_set_text(battery_icon, LV_SYMBOL_BATTERY_FULL);
+    } else if(percentage > 60) {
+        lv_label_set_text(battery_icon, LV_SYMBOL_BATTERY_3);
+    } else if(percentage > 40) {
+        lv_label_set_text(battery_icon, LV_SYMBOL_BATTERY_2);
+    } else if(percentage > 20) {
+        lv_label_set_text(battery_icon, LV_SYMBOL_BATTERY_1);
+    } else {
+        lv_label_set_text(battery_icon, LV_SYMBOL_BATTERY_EMPTY);
+    }
+}
+
 // --- Initialize UI ---
 void ui_init(void) {
     ESP_LOGI(TAG, "Creating tileview...");

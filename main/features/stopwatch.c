@@ -3,12 +3,19 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-// Internal state
+// Internal state of the stopwatch
 static bool running = false;
-static int64_t start_time = 0;        // when stopwatch was last started
-static int64_t accumulated_time = 0;  // total before last start
-static char time_str[32];             // static buffer for formatted time
 
+// Time when the stopwatch was last started
+static int64_t start_time = 0;
+
+// Accumulated time before the last start
+static int64_t accumulated_time = 0;
+
+// Static buffer for formatted time string
+static char time_str[32];
+
+// Start the stopwatch
 void stopwatch_start(void)
 {
     if (!running) {
@@ -17,6 +24,7 @@ void stopwatch_start(void)
     }
 }
 
+// Stop the stopwatch and accumulate time
 void stopwatch_stop(void)
 {
     if (running) {
@@ -26,6 +34,7 @@ void stopwatch_stop(void)
     }
 }
 
+// Toggle stopwatch running state
 void stopwatch_toggle(void)
 {
     if (running) {
@@ -35,6 +44,7 @@ void stopwatch_toggle(void)
     }
 }
 
+// Reset stopwatch to zero
 void stopwatch_reset(void)
 {
     running = false;
@@ -42,11 +52,13 @@ void stopwatch_reset(void)
     start_time = 0;
 }
 
+// Check if stopwatch is running
 bool stopwatch_running(void)
 {
     return running;
 }
 
+// Get elapsed time in microseconds
 int64_t stopwatch_get_elapsed_us(void)
 {
     if (running) {
@@ -57,18 +69,22 @@ int64_t stopwatch_get_elapsed_us(void)
     }
 }
 
+// Get elapsed time in milliseconds
 int64_t stopwatch_get_elapsed_ms(void)
 {
     return stopwatch_get_elapsed_us() / 1000;
 }
 
+// Get formatted time string (MM:SS:hundredths)
 const char* stopwatch_get_time_str(void)
 {
     int64_t total_us = stopwatch_get_elapsed_us();
     int total_sec = (int)(total_us / 1000000);
     int minutes = total_sec / 60;
     int seconds = total_sec % 60;
-    int hundredths = (int)((total_us % 1000000) / 10000);  // 1/100 sec
+
+    // Convert microseconds to hundredths
+    int hundredths = (int)((total_us % 1000000) / 10000); 
 
     snprintf(time_str, sizeof(time_str), "%02d:%02d:%02d", minutes, seconds, hundredths);
     return time_str;

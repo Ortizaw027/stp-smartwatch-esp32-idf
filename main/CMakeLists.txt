@@ -15,7 +15,7 @@ idf_component_register(
         "fonts/inter_48.c"
         "features/step_counter.c"
         "features/stopwatch.c"
-        "features/battery_percentage.c"
+        "features/battery.c"
         "old_ui/labels.c"
         "old_ui/screen.c"
         

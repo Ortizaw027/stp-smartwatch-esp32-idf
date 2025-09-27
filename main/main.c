@@ -10,7 +10,7 @@
 #include "driver/i2c_master.h"
 #include "imu_driver.h"
 #include "step_counter.h"
-#include "i2c_scan.h"
+#include "battery.h"
 
 // I2C config
 #define I2C_NUM       I2C_NUM_0
@@ -61,8 +61,8 @@ void app_main(void)
     
     // Initialize I2C after time sync
     init_i2c();
-    scan_i2c(i2c_bus_handle);
-   
+
+
     // Allocate LVGL display buffers on the heap
     uint8_t *buf1 = heap_caps_malloc(DISP_BUF_SIZE, MALLOC_CAP_DMA);
     uint8_t *buf2 = heap_caps_malloc(DISP_BUF_SIZE, MALLOC_CAP_DMA);
@@ -109,6 +109,12 @@ void app_main(void)
 
     // Initialize UI 
     ui_init();
+
+    // Initialize ADC
+    battery_adc_init();
+
+    // Start battery monitoring
+    battery_monitor_start();
 
     // Counter for IMU updates to reduce I2C bus load
     int imu_counter = 0;
