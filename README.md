@@ -115,7 +115,7 @@ C:.
 
 ## Demo
 
-Insert the demo video of it working here
+Insert the demo video here
 
 ---
 
