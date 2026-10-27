@@ -115,19 +115,24 @@ C:.
 
 ## Demo
 
-<table align="center">
-  <tr>
-    <td align="center"><b>UI Navigation</b></td>
-    <td align="center"><b>Stopwatch</b></td>
-    <td align="center"><b>Step Counter</b></td>
-  </tr>
-  <tr>
-    <td><img src="assets/WatchStartup.gif" width="300" alt="UI Navigation"></td>
-    <td><img src="assets/WatchStop.gif" width="300" alt="Stopwatch"></td>
-    <td><img src="assets/WatchSteps.gif" width="300" alt="Step Counter"></td>
-  </tr>
-</table>
+### UI Navigation & Startup
+<p align="center">
+  <img src="assets/WatchStartup.gif" width="360" alt="UI Navigation and Startup Demo">
+</p>
 
+---
+
+### Stopwatch Feature
+<p align="center">
+  <img src="assets/WatchStop.gif" width="360" alt="Stopwatch Feature Demo">
+</p>
+
+---
+
+### Step Counter & IMU Tracking
+<p align="center">
+  <img src="assets/WatchSteps.gif" width="360" alt="Step Counter Demo">
+</p>
 ---
 
 ## License
