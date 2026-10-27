@@ -115,7 +115,7 @@ C:.
 
 ## Demo
 
-### UI Navigation & Startup
+### Startup
 <p align="center">
   <img src="assets/WatchStartup.gif" width="360" alt="UI Navigation and Startup Demo">
 </p>
@@ -133,6 +133,7 @@ C:.
 <p align="center">
   <img src="assets/WatchSteps.gif" width="360" alt="Step Counter Demo">
 </p>
+
 ---
 
 ## License
