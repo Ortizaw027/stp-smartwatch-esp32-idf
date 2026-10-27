@@ -115,7 +115,18 @@ C:.
 
 ## Demo
 
-Insert the demo video here
+<table align="center">
+  <tr>
+    <td align="center"><b>UI Navigation</b></td>
+    <td align="center"><b>Stopwatch</b></td>
+    <td align="center"><b>Step Counter</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/WatchStartup.gif" width="300" alt="UI Navigation"></td>
+    <td><img src="assets/WatchStop.gif" width="300" alt="Stopwatch"></td>
+    <td><img src="assets/WatchSteps.gif" width="300" alt="Step Counter"></td>
+  </tr>
+</table>
 
 ---
 
